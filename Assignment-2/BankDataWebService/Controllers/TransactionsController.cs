@@ -21,10 +21,10 @@ namespace BankDataWebService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Transaction>>> GetTransaction()
         {
-          if (_context.Transactions == null)
-          {
-              return NotFound();
-          }
+            if (_context.Transactions == null)
+            {
+                return Problem("Entity set 'DBManager.Transaction' is null.");
+            }
             return await _context.Transactions.ToListAsync();
         }
 
@@ -33,17 +33,22 @@ namespace BankDataWebService.Controllers
         [HttpPost]
         public async Task<ActionResult<Transaction>> PostTransaction([FromBody]Transaction transaction)
         {
-            // get the account
             if (_context.Accounts == null)
             {
-                return BadRequest();
+                return Problem("Entity set 'DBManager.Accounts' is null.");
             }
+            if (_context.Transactions == null)
+            {
+                return Problem("Entity set 'DBManager.Transaction' is null.");
+            }
+
+            // get the account
             var account = await _context.Accounts.FindAsync(transaction.AcctNo);
 
             // update account balance
             if (account == null)
             {
-                return BadRequest();
+                return BadRequest("Account ID does not exist!");
             }
             account.Balance += transaction.Amount;
             _context.Entry(account).State = EntityState.Modified;
@@ -58,10 +63,6 @@ namespace BankDataWebService.Controllers
             }
 
             // insert into transaction table
-            if (_context.Transactions == null)
-            {
-              return Problem("Entity set 'DBManager.Transaction'  is null.");
-            }
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
 

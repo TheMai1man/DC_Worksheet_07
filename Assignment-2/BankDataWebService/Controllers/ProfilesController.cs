@@ -21,22 +21,22 @@ namespace BankDataWebService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Profile>>> GetProfiles()
         {
-          if (_context.Profiles == null)
-          {
-              return NotFound();
-          }
+            if (_context.Profiles == null)
+            {
+                return Problem("Entity set 'DBManager.Profiles'  is null.");
+            }
           
-          return await _context.Profiles.ToListAsync();
+            return await _context.Profiles.ToListAsync();
         }
 
         // GET: api/Profiles/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Profile>> GetProfile(uint id)
         {
-          if (_context.Profiles == null)
-          {
-              return NotFound();
-          }
+            if (_context.Profiles == null)
+            {
+                return Problem("Entity set 'DBManager.Profiles'  is null.");
+            }
             var profile = await _context.Profiles.FindAsync(id);
 
             if (profile == null)
@@ -54,7 +54,7 @@ namespace BankDataWebService.Controllers
         {
             if (_context.Profiles == null)
             {
-                return NotFound();
+                return Problem("Entity set 'DBManager.Profiles'  is null.");
             }
             var profiles = await _context.Profiles.ToListAsync();
             Profile profile = null;
@@ -83,7 +83,7 @@ namespace BankDataWebService.Controllers
         {
             if (id != profile.UserID)
             {
-                return BadRequest();
+                return BadRequest("You cannot alter User IDs!");
             }
 
             _context.Entry(profile).State = EntityState.Modified;
@@ -96,7 +96,7 @@ namespace BankDataWebService.Controllers
             {
                 if (!ProfileExists(id))
                 {
-                    return NotFound();
+                    return BadRequest("Profile ID does not exist!");
                 }
                 else
                 {
@@ -112,10 +112,15 @@ namespace BankDataWebService.Controllers
         [HttpPost]
         public async Task<ActionResult<Profile>> PostProfile([FromBody] Profile profile)
         {
-          if (_context.Profiles == null)
-          {
-              return Problem("Entity set 'DBManager.Profiles'  is null.");
-          }
+            if (_context.Profiles == null)
+            {
+                return Problem("Entity set 'DBManager.Profiles'  is null.");
+            }
+            if (await _context.Accounts.FindAsync(profile.UserID) != null)
+            {
+                return BadRequest("Profile ID already exists!");
+            }
+
             _context.Profiles.Add(profile);
             await _context.SaveChangesAsync();
 
@@ -128,18 +133,18 @@ namespace BankDataWebService.Controllers
         {
             if (_context.Profiles == null)
             {
-                return NotFound();
+                return Problem("Entity set 'DBManager.Profiles'  is null.");
             }
             var profile = await _context.Profiles.FindAsync(id);
             if (profile == null)
             {
-                return NotFound();
+                return BadRequest("Profile ID does not exist!");
             }
 
             _context.Profiles.Remove(profile);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool ProfileExists(uint id)

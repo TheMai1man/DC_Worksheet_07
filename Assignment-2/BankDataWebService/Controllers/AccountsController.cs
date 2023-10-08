@@ -21,10 +21,10 @@ namespace BankDataWebService.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
-          if (_context.Accounts == null)
-          {
-              return NotFound();
-          }
+            if (_context.Accounts == null)
+            {
+                return Problem("Entity set 'DBManager.Accounts'  is null.");
+            }
             return await _context.Accounts.ToListAsync();
         }
 
@@ -32,15 +32,15 @@ namespace BankDataWebService.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Account>> GetAccount(uint id)
         {
-          if (_context.Accounts == null)
-          {
-              return NotFound();
-          }
-            var account = await _context.Accounts.FindAsync(id);
+            if (_context.Accounts == null)
+            {
+                return Problem("Entity set 'DBManager.Accounts'  is null.");
+            }
 
+            var account = await _context.Accounts.FindAsync(id);
             if (account == null)
             {
-                return NotFound();
+                return BadRequest("Account ID does not exist!");
             }
 
             return account;
@@ -49,11 +49,11 @@ namespace BankDataWebService.Controllers
         // PUT: api/Accounts/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAccount(uint id, Account account)
+        public async Task<IActionResult> PutAccount(uint id, [FromBody]Account account)
         {
             if (id != account.AcctNo)
             {
-                return BadRequest();
+                return BadRequest("You cannot alter account IDs!");
             }
 
             _context.Entry(account).State = EntityState.Modified;
@@ -66,7 +66,7 @@ namespace BankDataWebService.Controllers
             {
                 if (!AccountExists(id))
                 {
-                    return NotFound();
+                    return BadRequest("Account ID does not exist!");
                 }
                 else
                 {
@@ -74,7 +74,7 @@ namespace BankDataWebService.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Accounts
@@ -82,10 +82,15 @@ namespace BankDataWebService.Controllers
         [HttpPost]
         public async Task<ActionResult<Account>> PostAccount([FromBody]Account account)
         {
-          if (_context.Accounts == null)
-          {
-              return Problem("Entity set 'DBManager.Accounts'  is null.");
-          }
+            if (_context.Accounts == null)
+            {
+                return Problem("Entity set 'DBManager.Accounts'  is null.");
+            }
+            if ( await _context.Accounts.FindAsync(account.AcctNo) != null)
+            {
+                return BadRequest("Account ID already exists!");
+            }
+
             _context.Accounts.Add(account);
             await _context.SaveChangesAsync();
 
@@ -98,18 +103,19 @@ namespace BankDataWebService.Controllers
         {
             if (_context.Accounts == null)
             {
-                return NotFound();
+                return Problem("Entity set 'DBManager.Accounts'  is null.");
             }
+
             var account = await _context.Accounts.FindAsync(id);
             if (account == null)
             {
-                return NotFound();
+                return BadRequest("Account ID does not exist!");
             }
 
             _context.Accounts.Remove(account);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool AccountExists(uint id)
